@@ -151,9 +151,7 @@ def resnet152_model(img_rows, img_cols, color_type=1, num_classes=None):
 
     model.load_weights(weights_path, by_name=True)
 
-    # Truncate and replace softmax layer for transfer learning
-    # Cannot use model.layers.pop() since model is not of Sequential() type
-    # The method below works since pre-trained weights are stored in layers but not in the model
+    # Pre-trained weights are stored in layers, not in the model
     x_newfc = AveragePooling2D((7, 7), name='avg_pool')(x)
     x_newfc = Flatten()(x_newfc)
     x_newfc = Dense(num_classes, activation='softmax', name='fc8')(x_newfc)
@@ -168,21 +166,18 @@ def resnet152_model(img_rows, img_cols, color_type=1, num_classes=None):
 
 if __name__ == '__main__':
 
-    # Example to fine-tune on 3000 samples from Cifar10
-
     img_rows, img_cols = 224, 224 # Resolution of inputs
     channel = 3
     num_classes = 10 
     batch_size = 8
     epochs = 10
 
-    # Load Cifar10 data. Please implement your own load_data() module for your own dataset
     X_train, Y_train, X_valid, Y_valid = load_cifar10_data(img_rows, img_cols)
 
-    # Load our model
+    # Load ResNet
     model = resnet152_model(img_rows, img_cols, channel, num_classes)
 
-    # Start Fine-tuning
+    # Fine-tune
     model.fit(X_train, Y_train,
               batch_size=batch_size,
               epochs=epochs,
@@ -191,8 +186,8 @@ if __name__ == '__main__':
               validation_data=(X_valid, Y_valid),
               )
 
-    # Make predictions
+    # Predictions and ground truth
     predictions_valid = model.predict(X_valid, batch_size=batch_size, verbose=1)
 
-    # Cross-entropy loss score
+    # Entropy loss function
     score = log_loss(Y_valid, predictions_valid)
